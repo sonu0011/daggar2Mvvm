@@ -3,6 +3,7 @@ package com.sonu.dagger2mvvm.ui.auth;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -16,6 +17,7 @@ import android.widget.Toast;
 import com.bumptech.glide.RequestManager;
 import com.sonu.dagger2mvvm.R;
 import com.sonu.dagger2mvvm.models.User;
+import com.sonu.dagger2mvvm.ui.main.MainActivity;
 import com.sonu.dagger2mvvm.viemodels.ViewModelProviderFactory;
 
 import javax.inject.Inject;
@@ -57,29 +59,30 @@ public class AuthActivity extends DaggerAppCompatActivity implements View.OnClic
         authVieModel.observeAuthState().observe(this, new Observer<AuthResource<User>>() {
             @Override
             public void onChanged(AuthResource<User> userAuthResource) {
-                if(userAuthResource != null){
-                    switch (userAuthResource.status){
+                if (userAuthResource != null) {
+                    switch (userAuthResource.status) {
 
-                        case LOADING:{
+                        case LOADING: {
                             showProgressBar(true);
                             break;
                         }
 
-                        case AUTHENTICATED:{
+                        case AUTHENTICATED: {
                             showProgressBar(false);
                             Log.d(TAG, "onChanged: LOGIN SUCCESS: " + userAuthResource.data.getEmail());
-                           // onLoginSuccess();
+                            onLoginSuccess();
+
                             break;
                         }
 
-                        case ERROR:{
+                        case ERROR: {
                             showProgressBar(false);
                             Toast.makeText(AuthActivity.this, userAuthResource.message
                                     + "\nDid you enter a number between 1 and 10?", Toast.LENGTH_SHORT).show();
                             break;
                         }
 
-                        case NOT_AUTHENTICATED:{
+                        case NOT_AUTHENTICATED: {
                             showProgressBar(false);
                             break;
                         }
@@ -89,6 +92,13 @@ public class AuthActivity extends DaggerAppCompatActivity implements View.OnClic
         });
     }
 
+    private void onLoginSuccess() {
+        Log.d(TAG, "onLoginSuccess: login successful!");
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
     private void setLogo() {
         glide.load(logo).into((ImageView) findViewById((R.id.login_logo)));
     }
@@ -96,17 +106,22 @@ public class AuthActivity extends DaggerAppCompatActivity implements View.OnClic
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.login_button) {
-            if (TextUtils.isEmpty(userInput.getText())) return;
-            authVieModel.authenticateUserWithId(Integer.parseInt(userInput.getEditableText().toString()));
+            attemptLogin();
         }
 
     }
 
-    private void showProgressBar(boolean isVisible){
-        if(isVisible){
-            progressBar.setVisibility(View.VISIBLE);
+    private void attemptLogin() {
+        if (TextUtils.isEmpty(userInput.getText().toString())) {
+            return;
         }
-        else{
+        authVieModel.authenticateUserWithId(Integer.parseInt(userInput.getText().toString()));
+    }
+
+    private void showProgressBar(boolean isVisible) {
+        if (isVisible) {
+            progressBar.setVisibility(View.VISIBLE);
+        } else {
             progressBar.setVisibility(View.GONE);
         }
     }

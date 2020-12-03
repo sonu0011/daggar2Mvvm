@@ -3,6 +3,7 @@ package com.sonu.dagger2mvvm.di;
 import android.app.Application;
 
 import com.sonu.dagger2mvvm.BaseApplication;
+import com.sonu.dagger2mvvm.SessionManager;
 
 import javax.inject.Singleton;
 
@@ -17,8 +18,10 @@ import dagger.android.support.AndroidSupportInjectionModule;
         ActivityBuildersModule.class,
         AppModule.class,
         ViewModelFactoryModule.class
-    })
+})
 public interface AppComponent extends AndroidInjector<BaseApplication> {
+
+    SessionManager sessionManager();
 
     @Component.Builder
     interface Builder {

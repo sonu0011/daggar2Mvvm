@@ -2,10 +2,9 @@ package com.sonu.dagger2mvvm.ui.auth;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.LiveDataReactiveStreams;
-import androidx.lifecycle.MediatorLiveData;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
 
+import com.sonu.dagger2mvvm.SessionManager;
 import com.sonu.dagger2mvvm.models.User;
 import com.sonu.dagger2mvvm.network.auth.AuthApi;
 
@@ -19,16 +18,21 @@ public class AuthVieModel extends ViewModel {
     private static final String TAG = "AuthVieModel";
 
     private AuthApi authApi;
-    private MediatorLiveData<AuthResource<User>> userData = new MediatorLiveData<>();
+    private SessionManager sessionManager;
 
     @Inject
-    public AuthVieModel(AuthApi authApi) {
+    public AuthVieModel(AuthApi authApi, SessionManager sessionManager) {
         this.authApi = authApi;
+        this.sessionManager = sessionManager;
     }
 
     public void authenticateUserWithId(int userId) {
-        userData.setValue(AuthResource.loading(null));
-        final LiveData<AuthResource<User>> source = LiveDataReactiveStreams.fromPublisher(
+        sessionManager.authenticateUserWithId(queryUserId(userId));
+    }
+
+    public LiveData<AuthResource<User>> queryUserId(int userId) {
+
+        return LiveDataReactiveStreams.fromPublisher(
                 authApi.getUser(userId)
                         .subscribeOn(Schedulers.io())
                         .onErrorReturn(new Function<Throwable, User>() {
@@ -53,16 +57,10 @@ public class AuthVieModel extends ViewModel {
                         })
                         .subscribeOn(Schedulers.io())
         );
-        userData.addSource(source, new Observer<AuthResource<User>>() {
-            @Override
-            public void onChanged(AuthResource<User> data) {
-                userData.setValue(data);
-                userData.removeSource(source);
-            }
-        });
+
     }
 
     public LiveData<AuthResource<User>> observeAuthState() {
-        return userData;
+        return sessionManager.getAuthUser();
     }
 }
